@@ -24,7 +24,7 @@ dynamic_cast<type&&>(e) // e不能是左值
 - 指针失败返回 0，引用失败返回 bad_cast 异常
 
 ```cpp
-// data_types/dynamic_cast.cpp
+// rtti/dynamic_cast.cpp
 #include <iostream>
 using namespace std;
 
@@ -123,7 +123,7 @@ typeid(e)
 - 如果是定义了一个虚函数的类型，typeid 的结果运行时才会求得；
 
 ```cpp
-// data_types/typeid.cpp
+// rtti/typeid.cpp
 #include <iostream>
 using namespace std;
 
