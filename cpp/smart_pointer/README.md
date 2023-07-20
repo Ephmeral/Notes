@@ -1,3 +1,4 @@
+#! https://zhuanlan.zhihu.com/p/644833547
 # C++ 笔记 | 智能指针
 ## 原始指针
 
@@ -41,8 +42,6 @@ int *p3 = NULL;   // C风格
 ```
 
 在 C++11 中用 nullptr 表示空指针，它是一种特殊的字面量，可以转换成任意的其他指针类型。
-
-#TODO nullptr 和 NULL
 
 ### 使用原始指针可能存在的问题
 #### 1. 野指针
@@ -502,6 +501,7 @@ Foo默认构造函数...
 Foo(int x)构造函数
 */
 ```
+
 #### shared_ptr 引用计数
 
 `shared_ptr` 强调的是共享所有权，它的内部采用的是引用计数原理，引用计数关联资源并跟踪有多少个 `shared_ptr` 指向该资源：
@@ -512,7 +512,8 @@ Foo(int x)构造函数
 
 引用计数意味着 `shared_ptr` 的大小会比原始指针要大，一般来说是原始指针的两倍大小，因为内部包含一个指向资源的原始指针，另外一个指向资源控制块（包括引用计数值，次级引用计数，删除器等），图示如下：
 
-![](pics/Pasted%20image%2020230718111343.png)
+<!-- ![](pics/03-shared_ptrControlBlock.png) -->
+![Image](https://pic4.zhimg.com/80/v2-d6f06f2cc8e5dbcf14f4df8830f4da12.png)
 
 `shared_ptr` 使用默认的 delete 作为资源的默认销毁机制，但是也可以自定义删除器，对于 `shared_ptr` 来说删除器是存放在控制块部分的，而并不属于指针类型的一部分：
 
@@ -566,9 +567,402 @@ pw1 = pw2;
 
 ### unique_ptr 类
 
+一个 `unique_ptr` 拥有它所指向的对象，任意时刻只能有一个 `unique_ptr` 指向一个给定的对象，当 `unique_ptr` 被销毁时，它所指向的对象也被销毁。
+- `unique_ptr` 体现的是专有所有权语义，一个非空的 `unique_ptr` 始终拥有它指向的对象；
+- 移动一个 `unique_ptr`，会将所有权进行转移（原指针被设为 null）；
+- 拷贝一个 `unique_ptr` 是被禁止的；
+- `unique_ptr` 是一种只可移动类型（_move-only type_）；
+- 析构时，一个 non-null `std::unique_ptr` 销毁它指向的资源；
+- 默认情况下，资源析构通过对 `std::unique_ptr` 里原始指针调用 `delete` 来实现；
 
+#### unique_ptr 成员函数
+
+`unique_ptr` 和 `shared_ptr` 有一些类似的成员函数，比如默认的构造函数，`get()`、`operator*`、`operator->`、`operator bool`，这里就不赘述了；
+
+**1. 构造函数**
+
+下面是来自 cppreference 的例子，展示了 `unique_ptr` 各种构造函数的使用方法：
+
+```cpp
+// unique_ptr1.cpp
+#include <iostream>
+#include <memory>
+
+struct Foo {  // 要管理的对象
+    Foo() { std::cout << "Foo ctor\n"; }
+    Foo(const Foo&) { std::cout << "Foo copy ctor\n"; }
+    Foo(Foo&&) { std::cout << "Foo move ctor\n"; }
+    ~Foo() { std::cout << "~Foo dtor\n"; }
+};
+
+struct D {  // 删除器
+    D(){};
+    D(const D&) { std::cout << "D copy ctor\n"; }
+    D(D&) { std::cout << "D non-const copy ctor\n"; }
+    D(D&&) { std::cout << "D move ctor \n"; }
+    void operator()(Foo* p) const {
+        std::cout << "D is deleting a Foo\n";
+        delete p;
+    };
+};
+
+int main() {
+    std::cout << "Example constructor(1)...\n";
+    std::unique_ptr<Foo> up1;            // up1 为空
+    std::unique_ptr<Foo> up1b(nullptr);  // up1b 为空
+
+    std::cout << "Example constructor(2)...\n";
+    {
+        std::unique_ptr<Foo> up2(new Foo);  // up2 现在占有 Foo
+    }                                       // Foo 被删除
+
+    std::cout << "Example constructor(3)...\n";
+    D d;
+    {                                             // 删除器类型不是引用
+        std::unique_ptr<Foo, D> up3(new Foo, d);  // 复制删除器
+    }
+    {                                               // 删除器类型是引用
+        std::unique_ptr<Foo, D&> up3b(new Foo, d);  // up3b 保有到 d 的引用
+    }
+
+    std::cout << "Example constructor(4)...\n";
+    {                                               // 删除器不是引用
+        std::unique_ptr<Foo, D> up4(new Foo, D());  // 移动删除器
+    }
+
+    std::cout << "Example constructor(5)...\n";
+    {
+        std::unique_ptr<Foo> up5a(new Foo);
+        std::unique_ptr<Foo> up5b(std::move(up5a));  // 所有权转移
+    }
+
+    std::cout << "Example constructor(6)...\n";
+    {
+        std::unique_ptr<Foo, D> up6a(new Foo, d);       // 复制 D
+        std::unique_ptr<Foo, D> up6b(std::move(up6a));  // 移动 D
+
+        std::unique_ptr<Foo, D&> up6c(new Foo, d);      // D 是引用
+        std::unique_ptr<Foo, D> up6d(std::move(up6c));  // 复制 D
+    }
+
+    std::cout << "Example array constructor...\n";
+    {
+        std::unique_ptr<Foo[]> up(new Foo[3]);
+    }  // 删除三个 Foo 对象
+}
+```
+
+**2. release()** 释放所有权，返回指针，并将原对象置为空  
+**3. reset()** 替换被管理对象
+
+```cpp
+// unique_ptr2.cpp
+#include <cassert>
+#include <iostream>
+#include <memory>
+
+struct Foo {
+    Foo() { std::cout << "Foo\n"; }
+    ~Foo() { std::cout << "~Foo\n"; }
+};
+
+struct D {
+    void operator() (Foo* p) {
+        std::cout << "Calling delete for Foo object... \n";
+        delete p;
+    }
+};
+
+int main() {
+    // 创建一个新的unique_ptr对象，指向Foo
+    std::unique_ptr<Foo> up1(new Foo()); 
+    // 释放up1的所有权，返回Foo对象指针
+    Foo* fp = up1.release();
+    assert(up1.get() == nullptr);
+    
+    std::cout << "==========================" << std::endl;
+
+    std::cout << "Creating new Foo...\n";
+    std::unique_ptr<Foo, D> up(new Foo(), D());  // up 占有 Foo 指针（删除器 D ）
+ 
+    std::cout << "Replace owned Foo with a new Foo...\n";
+    up.reset(new Foo());  // 替换up2指向的对象，并调用旧者的删除器
+ 
+    std::cout << "Release and delete the owned Foo...\n";
+    up.reset(nullptr);          // 将up2置空
+}
+/*
+$ g++ unique_ptr2.cpp -o unique_ptr && ./unique_ptr 
+Foo
+==========================
+Creating new Foo...
+Foo
+Replace owned Foo with a new Foo...
+Foo
+Calling delete for Foo object... 
+~Foo
+Release and delete the owned Foo...
+Calling delete for Foo object... 
+~Foo
+*/
+```
+
+虽然不能拷贝或者赋值 `unique_ptr` ，但是可以通过 `release()` 或者 `reset()` 来将指针的所有权进行转移；
+
+**4. make_unique** 创建一个 unique_ptr 对象，类似于 `make_shared`，都是非成员函数
+
+注：C++11 中并没有 make_unique 这个非成员函数，到了 C++14 标准库才定义了这个函数
+
+有以下几种用法：
+
+```cpp
+// unique_ptr3.cpp
+#include <iostream>
+#include <memory>
+
+struct Vec3 {
+    int x, y, z;
+    Vec3(int x = 0, int y = 0, int z = 0) noexcept : x(x), y(y), z(z) {}
+    friend std::ostream& operator<<(std::ostream& os, const Vec3& v) {
+        return os << '{' << "x:" << v.x << " y:" << v.y << " z:" << v.z << '}';
+    }
+};
+
+int main() {
+    // 使用默认构造函数。
+    std::unique_ptr<Vec3> v1 = std::make_unique<Vec3>();
+    // 使用匹配这些参数的构造函数
+    std::unique_ptr<Vec3> v2 = std::make_unique<Vec3>(0, 1, 2);
+    // 创建指向 5 个元素数组的 unique_ptr
+    std::unique_ptr<Vec3[]> v3 = std::make_unique<Vec3[]>(5);
+
+    std::cout << "make_unique<Vec3>():      " << *v1 << '\n'
+              << "make_unique<Vec3>(0,1,2): " << *v2 << '\n'
+              << "make_unique<Vec3[]>(5):   " << '\n';
+    for (int i = 0; i < 5; i++) {
+        std::cout << "     " << v3[i] << '\n';
+    }
+}
+/*
+$ g++ unique_ptr3.cpp -o unique_ptr && ./unique_ptr 
+make_unique<Vec3>():      {x:0 y:0 z:0}
+make_unique<Vec3>(0,1,2): {x:0 y:1 z:2}
+make_unique<Vec3[]>(5):   
+     {x:0 y:0 z:0}
+     {x:0 y:0 z:0}
+     {x:0 y:0 z:0}
+     {x:0 y:0 z:0}
+     {x:0 y:0 z:0}
+*/
+```
+
+#### unique_ptr 和 shared_ptr
+
+上面通过构造函数自定义删除器的时候，会发现一个和 `shared_ptr` 不太一样的地方，即
+
+```cpp
+// 假设T为类型，D为删除器
+std::unique_ptr<T, D> up(new T, D()); // 删除器也是指针类型的一部分
+std::shared_ptr<T> sp(new T, D());    // 删除器并不是指针类型的一部分
+```
+
+可以发现 `unique_ptr` 中的删除器也是类型定义的一部分，而 `shared_ptr` 不是（前面提到过，删除器存放在控制块上），所以对于不同删除器的 `unique_ptr` 不能存放在同一个容器中；
+
+使用默认的删除器的时候，可以认为 `unique_ptr` 的大小和原始指针一样，当自定义删除器时，有以下的情况：
+- 函数指针形式的删除器，通常会使 std::unique_ptr 的从一个字（word）大小增加到两个；
+- 对于函数对象形式的删除器来说，变化的大小取决于函数对象中存储的状态多少；
+- 无状态函数对象（比如不捕获变量的 lambda 表达式）对大小没有影响；
+- 这意味当自定义删除器可以实现为函数或者 lambda 时，尽量使用 lambda：
+
+而对于 shared_ptr 来说不管有没有自定义删除器，它的大小都是两个指针的大小（一个指向原始对象，另外指向资源控制块）
+
+unique_ptr 可以很容易的转为 shared_ptr（前面也提到过）：
+
+```cpp
+// 假设makeUniquePtr返回一个unique_ptr指针
+std::shared_ptr<T> sp = makeUniquePtr(arguments); // unique_ptr转为shared_ptr
+```
+
+最后 shared_ptr 和 unique_ptr 的另一个区别是：unique_ptr 可以管理数组对象，而 shared_ptr 不可以；
+
+### weak_ptr 类
+
+`weak_ptr` 并不控制所指向对象的生命周期，它指向一个由 `shared_ptr` 管理的对象。将 `weak_ptr` 绑定到一个 `shared_ptr` 并不会改变 `shared_ptr` 的引用计数。一旦最后一个指向对象的 `shared_ptr` 销毁，对象会被释放，此时 `weak_ptr` 是悬空的；
+
+```cpp
+// weak_ptr1.cpp
+#include <iostream>
+#include <memory>
+
+int main() {
+    auto sp = std::make_shared<int>(100);
+    std::cout << "sp的引用计数为：" << sp.use_count() << std::endl;
+    std::weak_ptr<int> wp(sp); // 创建一个weak_ptr
+    std::cout << "sp的引用计数为：" << sp.use_count() << std::endl;
+    std::cout << "wp的引用计数为：" << wp.use_count() << std::endl;
+}
+/*
+$ g++ weak_ptr1.cpp -o weak_ptr && ./weak_ptr
+sp的引用计数为：1
+sp的引用计数为：1
+wp的引用计数为：1
+*/
+```
+
+由于 `weak_ptr` 指向的对象可能不存在，不能直接使用 `weak_ptr` 来访问对象，需要调用 `lock` 函数返回一个 `shared_ptr`，然后再进行指针访问等操作，也可以通过 `expired` 函数来判断 `weak_ptr` 是否悬空：
+
+```cpp
+// weak_ptr2.cpp
+#include <iostream>
+#include <memory>
+
+int main() {
+    auto sp = std::make_shared<int>(100);
+    std::weak_ptr<int> wp(sp); // 创建一个weak_ptr
+    
+    if (std::shared_ptr<int> np = wp.lock()) { // 通过lock判断共享的对象是否存在
+        std::cout << "wp指向的对象的值为：" << *np << std::endl;
+    }
+
+    sp = nullptr; // sp置为空
+
+    if (std::shared_ptr<int> np = wp.lock()) {
+        std::cout << "此时这个条件不会成立" << std::endl;
+    } else {
+        std::cout << "wp指向的对象已经销毁" << std::endl;
+    }
+
+    if (wp.expired()) {
+        std::cout << "wp已经悬空，又称已经expired（过期）" << std::endl;
+    }
+}
+/*
+$ g++ weak_ptr2.cpp -o weak_ptr && ./weak_ptr
+wp指向的对象的值为：100
+wp指向的对象已经销毁
+wp已经悬空，又称已经expired（过期）
+*/
+```
+
+此外 weak_ptr 还有一些成员函数，`use_count()` 返回原生指针的引用计数，`reset()` 将本身置空，这里不再举例了；
+
+`weak_ptr` 的作用是为了解决 `shared_ptr` 循环引用问题，考虑下面是个例子：
+
+现在有三个对象 A、B 和 C，假设 A 和 C 共享 B 的所有权，因此持有 `shared_ptr`：
+
+<!-- ![](pics/03-shared_ptrA-B-C-1.png) -->
+![Image](https://pic4.zhimg.com/80/v2-5060b39f00be5b8a4ca35f268e03f215.png)
+
+如果 B 指向 A 的指针也很有用，应该使用哪种指针？
+
+<!-- ![](pics/03-shared_ptrA-B-C-2.png) -->
+![Image](https://pic4.zhimg.com/80/v2-ba129f612c2d46b80a505c8b6b8b702b.png)
+
+三种选择：
+
+- 1. **原始指针**：如果 A 销毁了，C 继续指向 B，B 会有一个指向 A 的悬空指针。B 不知道指针是否悬空，此时 B 访问 A 会导致未定义行为；
+- 2. **shared_ptr**：A 和 B 都持有对方的 `shared_ptr`，当 C 不指向 B 的时候，包括也没有其他结构指向 A 和 B，但是 A 和 B 互相阻止对方销毁，每个引用计数都为 1，此时 A 和 B 都被泄露；
+- 3. **weak_ptr**：如果 A 被销毁，B 指向它的指针悬空，此时通过 `weak_ptr` 的 `lock` 方法能够检测到悬空。另外 B 虽然也有指针指向 A，但是不会影响 A 的引用计数，不会导致 A 无法被销毁；
+
+### make 函数和直接 new 优缺点对比
+
+这里的 make 函数指的是 `make_shared` 和 `make_unique`
+
+#### make 函数好处
+
+优先使用 make_shared 和 make_unique 函数的第一个好处：可以简化代码（
+
+```cpp
+auto upw1(std::make_unique<Widget>());      //使用make函数
+std::unique_ptr<Widget> upw2(new Widget);   //不使用make函数
+auto spw1(std::make_shared<Widget>());      //使用make函数
+std::shared_ptr<Widget> spw2(new Widget);   //不使用make函数
+```
+
+第二个好处有关异常安全：
+
+```cpp
+// 根据优先级处理Widge
+void processWidget(std::shared_ptr<Widget> spw, int priority);
+// 另外一个计算优先级的函数
+int computePriority();
+
+int main() {
+	processWidget(std::shared_ptr<Widget>(new Widget),  //潜在的资源泄漏！
+              computePriority());
+
+}
+```
+
+这里使用 new 创建一个 shared_ptr 可能会发生内存泄漏，因为对于一个函数调用来说，需要先计算出实参，然后再调用这个函数，而编译器不会根据实参的顺序来计算，所以可能的顺序如下：
+
+- 1. 执行 `new Widget`
+- 2. 执行 `computePriority`
+- 3. 运行 `std::shared_ptr` 构造函数
+
+如果 computePriority 函数发生异常，那么 new 出来的对象就会发生泄漏，使用 make_shared 可以防止这个问题
+
+```cpp
+processWidget(std::make_shared<Widget>(), //没有潜在的资源泄漏
+		  computePriority());
+```
+
+另外 make_shared 相比于直接 new 来说，会提升效率：
+
+```cpp
+// 实际上执行了两次内存分配，先分配Widge对象，再分配控制块
+std::shared_ptr<Widget> spw(new Widget); 
+// 下面只需要分配一块内存即可，这块内存同时包含Widget对象和控制块
+auto spw = std::make_shared<Widget>();
+```
+
+#### make 函数缺点
+
+当然直接 new 相比 make_shared 来说，可以自定义删除器，这是 make_shared/make_unique 无法做到的；
+
+```cpp
+auto widgetDeleter = [](Widget* pw) { … };
+std::unique_ptr<Widget, decltype(widgetDeleter)>
+    upw(new Widget, widgetDeleter);
+
+std::shared_ptr<Widget> spw(new Widget, widgetDeleter);
+```
+
+另外一个场景 make 函数可能有问题，即利用花括号初始化：
+
+```cpp
+// make_shared.cpp
+#include <iostream>
+#include <vector>
+#include <memory>
+
+int main() {
+    // 下面直接使用花括号初始化vector会编译失败，花括号不能完美转发
+    // auto sp = std::make_shared<std::vector<int>>({10, 20}); 
+    
+    // 可以利用auto先创建一个std::initializer_list对象，再传递给make函数
+    auto initList = {10, 20};
+    auto spv = std::make_shared<std::vector<int>>(initList);
+    for (auto it : *spv) {
+        std::cout << it << std::endl;
+    }
+    return 0;
+}
+/*
+$  g++ make_shared.cpp -o make_shared && ./make_shared 
+10
+20
+*/
+```
+
+最后一个可能不适合使用 make 函数的场景是：创建很大的对象
+
+前面提到过，直接使用 new 会先分配对象的内存，再分配控制块的内存，如果使用 make 函数的话，只会分配一次内存，这个内存包含对象和控制块。
+
+假设现在对象非常大，如果使用 make 函数创建，另外有一个 `weak_ptr` 指向这个对象，这样的话，即使没有 `shared_ptr` 指向该对象（即引用计数为 0），仍然有一个 `weak_ptr` 会保存这个控制块，这就导致这个大对象的内存一直没释放，直到最后一个 `shared_ptr` 和最后一个指向它的 `weak_ptr` 已被销毁，才会释放。
 
 ## 参考资料
+
 - [Dangling, Void , Null and Wild Pointers - GeeksforGeeks](https://www.geeksforgeeks.org/dangling-void-null-wild-pointers/)
 - [shared_ptr - cppreference.com](https://zh.cppreference.com/w/cpp/memory/shared_ptr)
 - 《C++Primer 第五版》第 12 章
