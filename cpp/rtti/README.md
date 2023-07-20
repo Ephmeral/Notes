@@ -1,4 +1,4 @@
-# 运行时类型识别（RTTI）
+# C++笔记 | 运行时类型识别（RTTI）
 C++ 的 RTTI（Run-Time Type Information）是一种运行时类型信息机制，用于在程序运行时获取对象的类型信息。RTTI 主要包括两个关键字：typeid 和 dynamic_cast。
 
 - typeid 运算符，用于返回表达式的类型。  
