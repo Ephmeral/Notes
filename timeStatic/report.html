@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style type="text/css">
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            line-height: 20px;
+            color: #333;
+        }
+        table {
+            max-width: 100%;
+            background-color: transparent;
+            border-spacing: 0;
+            width: 100%;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-collapse: separate;
+            border-left: 0;
+            border-radius: 4px;
+        }
+        thead th {
+            text-align: left;
+            padding: 5px;
+        }
+        tfoot th {
+            text-align: left;
+            padding: 5px;
+            border-top: 1px solid #DDD;
+        }
+        tbody tr:nth-child(odd) td {
+            background-color: #f9f9f9;
+        }
+        th, td {
+            padding: 8px;
+            border-left: 1px solid #DDD;
+        }
+        td {
+            border-top: 1px solid #DDD;
+        }
+        </style>
+        <meta charset="UTF-8"/>
+    </head>
+    <body style="padding-top: 90px;">
+        <a href="http://timetrack.io" target="_blank">
+            TimeTrack
+        </a>
+        <h3>Time Entries</h3>
+        <table style="width: 600px">
+            <thead>
+                <tr>
+                    <th style="font-weight: bold;">Activity Type</th>
+                    <th style="font-weight: bold;">From</th>
+                    <th style="font-weight: bold;">To</th>
+                    <th style="font-weight: bold;">Duration</th>
+                    <th style="font-weight: bold;">Comment</th>
+                </tr>
+            </thead>
+            <tbody>
+            
+                <tr>
+                    <td>S1:闲刷</td>
+                    <td>2023-07-30 23:37</td>
+                    <td>2023-07-30 23:51</td>
+                    <td>00:14</td>
+                    <td></td>
+                </tr>
+            
+                <tr>
+                    <td>S4:洗护</td>
+                    <td>2023-07-30 22:53</td>
+                    <td>2023-07-30 23:37</td>
+                    <td>00:44</td>
+                    <td></td>
+                </tr>
+            
+                <tr>
+                    <td>S1:游戏</td>
+                    <td>2023-07-30 18:18</td>
+                    <td>2023-07-30 22:53</td>
+                    <td>04:34</td>
+                    <td>以撒的结合，茶杯头双人</td>
+                </tr>
+            
+                <tr>
+                    <td>S4:用餐</td>
+                    <td>2023-07-30 17:42</td>
+                    <td>2023-07-30 18:18</td>
+                    <td>00:35</td>
+                    <td></td>
+                </tr>
+            
+                <tr>
+                    <td>S2:OS</td>
+                    <td>2023-07-30 12:51</td>
+                    <td>2023-07-30 17:42</td>
+                    <td>04:51</td>
+                    <td>进程管理，理解了上下文切换原理，笔记梳理，才第一部分，感觉进程还有不少内容</td>
+                </tr>
+            
+                <tr>
+                    <td>S4:用餐</td>
+                    <td>2023-07-30 12:10</td>
+                    <td>2023-07-30 12:51</td>
+                    <td>00:41</td>
+                    <td></td>
+                </tr>
+            
+                <tr>
+                    <td>S2:DSA</td>
+                    <td>2023-07-30 10:26</td>
+                    <td>2023-07-30 12:10</td>
+                    <td>01:43</td>
+                    <td>赛后过了t4，t3抄的</td>
+                </tr>
+            
+                <tr>
+                    <td>S2:C++</td>
+                    <td>2023-07-30 09:52</td>
+                    <td>2023-07-30 10:26</td>
+                    <td>00:34</td>
+                    <td>delete关键字</td>
+                </tr>
+            
+                <tr>
+                    <td>S3:通勤</td>
+                    <td>2023-07-30 09:42</td>
+                    <td>2023-07-30 09:52</td>
+                    <td>00:09</td>
+                    <td></td>
+                </tr>
+            
+                <tr>
+                    <td>S4:洗护</td>
+                    <td>2023-07-30 09:17</td>
+                    <td>2023-07-30 09:42</td>
+                    <td>00:24</td>
+                    <td></td>
+                </tr>
+            
+                <tr>
+                    <td>S7:睡眠</td>
+                    <td>2023-07-30 01:42</td>
+                    <td>2023-07-30 09:17</td>
+                    <td>07:35</td>
+                    <td></td>
+                </tr>
+            
+                <tr>
+                    <td>S1:闲刷</td>
+                    <td>2023-07-29 23:36</td>
+                    <td>2023-07-30 01:42</td>
+                    <td>02:06</td>
+                    <td>疯狂水群</td>
+                </tr>
+            
+            </tbody>
+        </table>
+        <h3>Statistics</h3>
+        <table style="width: 600px">
+            <thead>
+                <tr>
+                    <th>Activity Type</th>
+                    <th>Duration</th>
+                    <th>Percent</th>
+                </tr>
+            </thead>
+            <tfoot>
+                <tr>
+                    <th>Total</th>
+                    <th>23:51</th>
+                    <th>100.0%</th>
+                </tr>
+            </tfoot>
+            <tbody>
+            
+                <tr>
+                    <td>S7:睡眠</td>
+                    <td>07:35</td>
+                    <td>31.81</td>
+                </tr>
+            
+                <tr>
+                    <td>S2:OS</td>
+                    <td>04:51</td>
+                    <td>20.34</td>
+                </tr>
+            
+                <tr>
+                    <td>S1:游戏</td>
+                    <td>04:34</td>
+                    <td>19.20</td>
+                </tr>
+            
+                <tr>
+                    <td>S1:闲刷</td>
+                    <td>01:56</td>
+                    <td>8.15</td>
+                </tr>
+            
+                <tr>
+                    <td>S2:DSA</td>
+                    <td>01:43</td>
+                    <td>7.23</td>
+                </tr>
+            
+                <tr>
+                    <td>S4:用餐</td>
+                    <td>01:16</td>
+                    <td>5.37</td>
+                </tr>
+            
+                <tr>
+                    <td>S4:洗护</td>
+                    <td>01:08</td>
+                    <td>4.81</td>
+                </tr>
+            
+                <tr>
+                    <td>S2:C++</td>
+                    <td>00:34</td>
+                    <td>2.39</td>
+                </tr>
+            
+                <tr>
+                    <td>S3:通勤</td>
+                    <td>00:09</td>
+                    <td>0.70</td>
+                </tr>
+            
+            </tbody>
+        </table>
+    </body>
+</html>
