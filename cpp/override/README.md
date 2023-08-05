@@ -262,3 +262,8 @@ const_ref_qualifier.cpp:11:18: error: expected ‘;’ at end of member declarat
 const_ref_qualifier.cpp:11:26: error: expected unqualified-id before ‘{’ token
      void func3() & const { // 这里编译错误
 ```
+
+## 参考资料
+
+- 《Effective Modern C++》条款十二
+- 《现代 C++ 语言核心特性解析》 第 16 章
