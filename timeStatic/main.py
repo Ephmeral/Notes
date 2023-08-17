@@ -37,6 +37,7 @@ class TimeEntries:
 def classify_time(activities):
     time_summary = {'S0': 0, 'S1': 0, 'S2': 0, 'S3': 0, 'S4': 0, 'S5': 0, 'S6': 0, 'S7': 0}
     # 假设times是包含所有时间记录的列表，每个记录是一个字符串，格式为"时间分类:时间长度"，例如"S1:01:30"。
+    time_study = {}
     for activity in activities:
         time_type = activity.activity_type[:2]
         idx = activity.duration.index(":")
@@ -45,9 +46,22 @@ def classify_time(activities):
         # 将时间长度转换为timedelta对象，并累加到对应时间分类的总时间中
         duration = timedelta(hours=duration_hours, minutes=duration_minutes)
         time_summary[time_type] += int(duration.total_seconds())
+        # 将学习时间单独区分小类
+        if time_type == "S2":
+            time_study[activity.activity_type[3:]] = time_study.get(activity.activity_type[2:], 0) + int(duration.total_seconds())
+
     # print(time_summary)
     # types = {'S1':'娱乐时间', 'S2':'学习成长', 'S3':'日常通勤', 'S4':'日常生活', 'S5':'人际交往', 'S6':'工作', 'S7':'睡眠'}
-
+    print("=====time study===========")
+    # print(time_study)
+    result_study = {}
+    for study_type, times in time_study.items():
+        duration = timedelta(seconds=times)
+        hours, remainder = divmod(times, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        # result[types[time_type]] = datetime.strptime(f"{hours:03d}:{minutes:03d}", "%H:%M").strftime("%H:%M")
+        result_study[study_type] = str(hours) + ":" + f"{minutes:02d}"
+    print(result_study)
     result = {}
     for time_type, seconds in time_summary.items():
         duration = timedelta(seconds=seconds)
@@ -60,6 +74,7 @@ def classify_time(activities):
     for key, val in result.items():
         print("| " + key + " | " + val + " |")
 
+# 打印睡眠时间
 def print_sleep(entities):
     print("Sleep time")
     entities = reversed(entities)
@@ -108,7 +123,11 @@ if __name__ == "__main__":
             print(activity.activity_type, activity.duration, activity.percent)
         for entity in entities:
             print(entity.activity_type, entity.time_from, entity.time_to, entity.duration, entity.comment)
+    
+    # 将具体的分组合并成大组进行分类，S0, S1...
     classify_time(activities)
+
+    # 将结果写入result.txt文件中
     with open("result.txt", "w") as fp:
         for activity in activities:
             fp.write(f"{activity.activity_type}, {activity.duration}, {activity.percent}\n")
@@ -118,4 +137,4 @@ if __name__ == "__main__":
         for entity in entities:
             fp.write(f"{entity.activity_type}, {entity.time_from}, {entity.time_to}, {entity.duration}, {entity.comment}\n")
     print("====================================================")
-    print_sleep(entities)
+    # print_sleep(entities)
