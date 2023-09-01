@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BinNode.h"
+#include "BinTree/BinNode.h"
 #include "util/release.h"
 
 template <typename T>
