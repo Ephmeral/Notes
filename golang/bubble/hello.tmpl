@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Hello</title>
+</head>
+<body>
+    <p>=============u1============</p>
+    <p> {{ kua .Name}} </p>
+
+    
+    <p>Hello {{ .u1.Name }}</p>
+    <p>年龄： {{ .u1.Age }}</p>
+    <p>性别： {{ .u1.Gender }}</p>
+    <p>=============m1============</p>
+    <p>Hello {{ .m1.Name }}</p>
+    <p>年龄： {{ .m1.Age }}</p>
+    <p>性别： {{ .m1.Gender }}</p>
+
+    <p>===================</p>
+    {{ if lt .m1.Age 22}}
+    好好上学
+    {{else}}
+    好好工作
+    {{end}}
+
+    <p>===================</p>
+    {{ range $idx, $hobby := .hobby }}
+        <p>{{$idx}} -  {{$hobby}}</p>
+    {{end}}
+
+    {{with .m1}}
+         <p>Hello {{ .Name }}</p>
+         <p>年龄： {{ .Age }}</p>
+         <p>性别： {{ .Gender }}</p>
+    {{end}}
+
+
+</body>
+</html>
