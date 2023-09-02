@@ -69,7 +69,7 @@ class MiniTimeLog:
         print("- " + self.type[3:] + " **" + self.getTime(self.time) + "**")
         if len(self.commentList) != 0:
             for com in self.commentList:
-                print("   -", com)
+                print("    - {0} {1}".format(self.tags, com), end="")
 
     def getTime(self, time) -> str:
         hh = time // 3600
@@ -177,7 +177,7 @@ def openTime():
     # 创建一个字典来存储每个活动类别的总持续时间
     activities = []
     entities = []
-    with open('/home/silas/MyCSNotes/timeStatic/report.csv', 'r') as file:
+    with open('/home/ephmeral/demo/MyCSNotes/timeStatic/report.csv', 'r') as file:
         reader = csv.DictReader(file)
         flags = True
         for row in reader:
