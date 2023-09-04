@@ -1,0 +1,10 @@
+<h1 style='color:orange'>Hello Golang!</h1>
+<h2>how are you</h2>
+<img id='i1' src='https://tse1-mm.cn.bing.net/th/id/OIP-C.jFQ3fSvyuxObWhLC22iiUgHaNK?pid=ImgDet&rs=1'>
+
+<button>点我</button>
+<script>
+document.getElementById('b1').onclick=function(){
+    document.getElementById('i1').src='https://pic1.zhimg.com/v2-50cfcca4ffe3a8ca1859fce379d759da_r.jpg?source=1940ef5c'
+}
+</script>
