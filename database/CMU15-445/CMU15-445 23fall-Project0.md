@@ -38,11 +38,47 @@ Put 函数的实现就是按照我上面说的：
 	- 上面创建新的节点和拷贝节点，都可以用 `std::make_shared` 函数来完成；
 - 最后返回的时候，需要新创建一个 Trie，这样的话，最开始创建的 new_root 就需要保存一下；
 
-上面代码还有一个特殊情况没有考虑到，就是 key 为空的时候，相当于在 root 的位置上放入一个新的值，
+上面代码还有一个特殊情况没有考虑到，就是 key 为空的时候，相当于在 root 的位置上放入一个新的值，我在处理代码的时候枚举字符串的时候会留最后一个，如果 key 为空的话需要额外判断一下，单独处理一下就好。
+
+2. Remove 函数
+
+- 如果 root_ 是 nullptr 的话，直接返回，因为此时无法删除任何节点；
+- 如果 key 是空的话，可能存在 ("", val) 这样的值，所以需要将 root_ 节点 `Clone()` 一份，相当于是将 TrieNodeWithValue -> TrieNode，主要还需要设置 is_value_node_ 为 false；
+- 除了上面两种特殊情况，下面就是主要的实现逻辑，因为还要求当一个节点没有任何孩子节点的时候，这个节点就会被删除，这就可能出现递归删除父节点的情况。所以需要保存路径上的父节点，我这里使用 vector 来存储。
+	- 用一个指针 prev 指向根节点，然后枚举 key 所有的字符 c，每次循环中查看 prev 中是否有字符 c 对应的孩子节点，如果没有直接返回。有的话需要将孩子节点复制一份，同时修改 prev 中的 `children_[c]`，还需要保存 prev 到父节点 vector 中；
+	- 枚举完成后，复制最后一个节点，主要复制的时候返回 `std::shared_ptr<TrieNode>`，并修改 is_value_node_ 变量，同样的这个父节点也需要加入到 vector 中；
+	- 最后从后往前将 vector 中的父节点取出来，判断它的孩子节点的 children_ 是否为空，如果是的话将父节点的 children_[c] 删除，相当于将孩子节点删除了；
+
+3. Get 函数
+
+Get 函数实现起来相对简单点，只需要从根节点开始，枚举 key ，依次看是否有对应的孩子节点，没有直接返回 nullptr。到最后一个节点的时候，判断是否为 is_value_node_，不是的话直接返回 nullptr。
+
+最后需要将 `std::shared_ptr<const TrieNode>` 转换为 `const TrieNodeWithValue<T> *`，因为不能直接对智能指针进行 dynamic_cast，需要通过 shared_ptr 的 get 成员函数获得原始指针，然后再进行转换。最后返回的时候，将也是需要将 TrieNodeWithValue 的 value_ 通过 get 成员函数返回原始指针。
 
 ## Task #2 - Concurrent Key-Value Store
 
+这个 task 是在 Trie 基础上加上并发，并发的要求是可以有多个读操作（Get 函数），只能有单个写操作（Put/Delete 函数）。另外写的时候，不会影响到读，这相当于读操作的时候是对旧 Trie 进行读的，而写的时候是对新的 Trie 进行写的。
+
+TrieStore 有两个锁:
+- root_lock_：用来保护 root_，即每次需要读或者写 root_ 的时候，都需要获得这把锁；
+- write_lock_：用来同步读操作，最多只有一个读操作；
+
+对于并发的 TrieStore 来说，写操作分为 3 个步骤：复制一份旧的 root_，在新的 root 上面进行写操作，然后再将新的 root 写回 root_，写操作必须用 write_lock_ 来进行同步，保证一次最多只有一个写，而只有对 root_ 进行操作就需要用 root_lock_ 来保护。
+
+读操作只需要拷贝一份旧的 root_，然后在拷贝的 root 上面进行查找，最后返回的也是拷贝得到的 root。读操作不需要 write_lock_ 进行同步，但是仍然需要 root_lock_ 来保护 root_。
+
 ## Task #3 - Debugging
 
+task3 我用的 Clion 调试，应该是最容易上手的，不算难。
 ## Task #4 - SQL String Functions
 
+task4 其实就是实现一个大小写转换的函数，主要是找到对应的文件，跟着注释修改基本没啥大的问题。可能就是这两个函数不太好找，可以使用 `find . | grep filename` 来查询：
+
+```shell
+./src/include/execution/expressions/string_expression.h
+./src/planner/plan_func_call.cpp
+```
+
+## 小结
+
+这次代码写起来相对去年写的要快点，主要是缕清楚思路，代码实现的时候，可以多 review 一下，把一些地方能简化的尽可能简化一下。
