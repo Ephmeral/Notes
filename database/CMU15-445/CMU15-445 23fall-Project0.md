@@ -1,3 +1,5 @@
+#! https://zhuanlan.zhihu.com/p/656227418
+# CMU15-445 23fall-Project0
 ## 前言
 
 2023 fall 课程已经开始了，听说今年又要添加新的内容，这次打算继续刷一遍 lab，其实去年写过 22fall 版本的，依稀记得被 B+ 树支配的恐惧，我可能前前后后调试了一个月左右（太菜了），最后 project4 也是差了一个测试用例没通过。所以今年的课打算重新刷一遍，顺便补充一些数据库的理论知识。
@@ -8,8 +10,7 @@ p0 是需要实现一个基于 copy-on-write 字典树的 kv 存储，不熟悉�
 
 键的最后一个字符对应的节点，存放了值。例如，考虑将 kv 对 ("ab", 1) 和 ("ac", "val") 插入到 trie 中，可以看到最后的节点分别存放了 1 和 val。
 
-![15445.courses.cs.cmu.edu/fall2023/project0/trie-01.svg](https://15445.courses.cs.cmu.edu/fall2023/project0/trie-01.svg)
-
+![Image](https://pic4.zhimg.com/80/v2-42a6efbc654e8ee8c12773b785212ed0.png)
 
 ## Task #1 - Copy-On-Write Trie
 
@@ -20,7 +21,9 @@ p0 是需要实现一个基于 copy-on-write 字典树的 kv 存储，不熟悉�
 - 找到 new_root 的孩子 'a' 对应的节点 Node1，再将 Node1 拷贝一份得到 Node2，同样的 Node2 和 Node1 有着相同的指针分别对应着 'b' 和 'c' 的节点；
 - 继续遍历键，发现要插入 'd'，这个时候因为 Node2 指向 'd' 的指针，所以需要创建一个新的节点。
 
-![](pics/Pasted%20image%2020230906175231.png)
+<!-- ![](pics/Pasted%20image%2020230906175231.png) -->
+
+![Image](https://pic4.zhimg.com/80/v2-3539ec232ce14c79682321251fa62107.png)
 
 删除一个键值对和上面的过程基本类似，遍历的每一个节点都需要新拷贝一份，然后再进行操作。
 
@@ -82,3 +85,5 @@ task4 其实就是实现一个大小写转换的函数，主要是找到对应�
 ## 小结
 
 这次代码写起来相对去年写的要快点，主要是缕清楚思路，代码实现的时候，可以多 review 一下，把一些地方能简化的尽可能简化一下。
+
+PS:今年好像 23fall 的 gradescope 中 p0 好像没有测试代码了，不过可以找到 23spring 的 gradescope 提交一下，这两个是一样的。
