@@ -177,7 +177,7 @@ def openTime():
     # 创建一个字典来存储每个活动类别的总持续时间
     activities = []
     entities = []
-    with open('/home/ephmeral/demo/MyCSNotes/timeStatic/report.csv', 'r') as file:
+    with open('/home/silas/MyCSNotes/timeStatic/report.csv', 'r') as file:
         reader = csv.DictReader(file)
         flags = True
         for row in reader:
