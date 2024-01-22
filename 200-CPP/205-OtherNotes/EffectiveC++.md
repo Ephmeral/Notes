@@ -738,3 +738,308 @@ C++11 更好的办法是使用 `std::make_shared` ：
 processWidget(std::make_shared<Widget>(), //没有潜在的资源泄漏
 		  computePriority());
 ```
+
+---
+# 4 设计与声明
+
+## 条款 18：让接口容易被正确使用，不易被误用
+
+1. 好的接口很容易被正确使用，不容易被误用。你应该在你的所有接口中努力达成这些性质。
+2. “促进正确使用”的办法包括接口的一致性，以及与内置类型的行为兼容。
+3. “阻止误用”的办法包括建立新类型、限制类型上的操作，束缚对象值，以及消除客户的资源管理责任。
+4. std::shared_ptr 支持定制型删除器（custom deleter）。这可防范 DLL（动态链接库） 问题，可被用来自动解除互斥锁（mutexes；见条款 14）等等。
+
+```cpp
+// 三个参数类型相同的函数容易造成误用
+Data::Data(int month, int day, int year) { ... }
+
+// 通过适当定义新的类型加以限制，降低误用的可能性
+Data::Data(const Month& m, const Day& d, const Year& y) { ... }
+
+// 工厂函数返回值强制为智能指针，避免客户使用原始指针导致潜在的内存泄漏问题
+std::shared_ptr<Investment> createInvestment(); 
+```
+
+## 条款 19：设计 class 犹如设计 type
+
+设计一个高效的 class 可以通过以下问题，来进行规范：
+
+1. **新 type 的对象应该如何被创建和销毁？** 这会影响到你的 class 的构造函数和析构函数以及内存分配函数和释放函数（operator new，operator new[]，operator delete 和 operator delete[]——见第 8 章）的设计，当然前提是如果你打算撰写它们。
+
+2. **对象的初始化和对象的赋值该有什么样的差别？** 这个答案决定你的构造函数和赋值操作符的行为，以及其间的差异。
+
+3. **新 type 的对象如果被 passed by value（以值传递），意味着什么？** 拷贝构造函数用来定义一个 type 的按值传递该如何实现。
+
+4. **什么是新 type 的“合法值”？** 对于 class 的成员变量，需要考虑合法有效的值，需要进行校验，考虑异常等。
+
+5. **你的新 type 需要配合某个继承体系吗？** 如果继承自其他的类，受到它们的虚函数影响，以及考虑你实现的类是否可以被其他的类继承，涉及到是否考虑用虚析构函数。
+
+6. **你的新 type 需要什么样的转换？** 如果新的 type 和其他的 type 之间是否能隐式转换，需要考虑到 explicit 构造函数，以及执行转换的操作符重载。
+
+7. **什么样的操作符和函数对此新 type 而言是合理的？** 这个问题的答案决定你将为你的 class 声明哪些函数。其中某些该是 member 函数，某些则否（见条款 23，24，46）。
+
+8. **什么样的标准函数应该驳回？** 那些正是你必须声明为 private 者（见条款 6）。
+
+9. **谁该取用新 type 的成员？** 这个提问可以帮助你决定哪个成员为 public，哪个为 protected，哪个为 private。它也帮助你决定哪一个 classes 和/或 functions 应该是 friends，以及将它们嵌套于另一个之内是否合理。
+
+10. **什么是新 type 的“未声明接口”？** 它对效率、异常安全性（见条款 29）以及资源运用（例如多任务锁定和动态内存）提供何种保证？你在这些方面提供的保证将为你的 class 实现代码加上相应的约束条件。
+
+11. **你的新 type 有多么一般化？** 或许你其实并非定义一个新 type，而是定义一整个 types 家族。果真如此你就不该定义一个新 class，而是应该定义一个新的 class template。
+
+12. **你真的需要一个新 type 吗？** 如果只是定义新的 derived class 以便为既有的 class 添加机能，那么说不定单纯定义一或多个 non-member 函数或 templates，更能够达到目标。
+
+## 条款 20：宁以 pass-by-reference-to-const 替换 pass-by-value
+
+在传递参数的时候，尽可能使用 const 引用形式，而不是传值，因为可以更加的高效，同时可以避免切割问题。
+
+```cpp
+bool validateStudent(Student s); // 传值方式进行传参
+Student plato;
+bool platoIsOk = validateStudent(plato); // 调用函数
+```
+
+上面按照传值方式进行的时候，调用 `validateStudent(plato)` 这个函数的时候，会调用一次拷贝构造函数，同时这个函数作用域结束还会调用一次析构函数。如果 `Student` 类中还有其他的成员变量，也会调用相应的拷贝构造函数和析构函数，所以开销很大。推荐下面的写法：
+
+```cpp
+bool validateStudent(const Student& s); // 按const引用方式进行传参
+```
+
+另外在继承体系下，一个函数是按照基类进行传值，如果一个派生类传递进去，则会导致切割问题，即派生类对象会被隐式转化为基类再进行相应的处理：
+
+```cpp
+class Window {
+public:
+    ...
+    std::string GetName() const;
+    virtual void Display() const;
+};
+
+class WindowWithScrollBars : public Window {
+public:
+    virtual void Display() const override;
+};
+
+void show(Window w) {
+	w.Display();
+}
+...
+WindowWithScrollBars wsb;
+show(wsb); // 这里打印的是基类Window的结果，而不是派生类WindowWithScrollBars
+```
+
+按照 const 引用的形式传参则不会出现上面的问题。
+
+对于内置类型、以及 STL 的迭代器和函数对象，按值传参更加的合适，因为引用内部是采用指针实现的，内置类型相比于指针大小可能更加的小，而 STL 的迭代器和函数对象这是因为习惯性设计为按值传参的。
+
+## 条款 21：必须返回对象时，别妄想返回其 reference
+
+一个函数需要返回一个新对象的时候，不要返回引用形式，不论是局部变量，堆分配的变量，还是局部 static 变量，返回一个引用都不是合适的，都存在相应的隐患。
+
+```cpp
+// 返回一个局部变量，局部变量作用域结束会自动销毁，返回的对象不是有效的
+const Rational& operator*(const Rational& lhs, const Rational& rhs) {
+	Rational result(lhs.n * rhs.n, lhs.d * rhs.d);
+	return result;
+}
+// 返回一个堆分配的对象，可能存在潜在的内存泄漏，因为不知道哪里会进行delete这个对象
+const Rational& operator*(const Rational& lhs, const Rational& rhs) {
+	Rational* result = new Rational(lhs.n * rhs.n, lhs.d * rhs.d);
+	return *result;
+}
+// 返回一个局部静态对象，多次调用同一个函数返回的对象是一样的
+const Rational& operator*(const Rational& lhs, const Rational& rhs) {
+	static Rational result;
+	result = Rational(lhs.n * rhs.n, lhs.d * rhs.d);
+	return *result;
+}
+```
+
+正确做法返回一个新对象即可，而编译器实际上会做 RVO 优化，所以效率其实并不低：
+
+```cpp
+// 返回一个新对象，按值返回
+inline const Rational operator*(const Rational& lhs, const Rational& rhs) {
+	return Rational(lhs.n * rhs.n, lhs.d * rhs.d);
+}
+```
+
+## 条款 22：将成员变量声明为 private
+
+成员变量设置为 private 体现了封装，可以对每个变量设置 get、set 函数从而精准的控制是只读、只写、不可读不可写等等，如果是 public 变量则是都可以读、写。
+
+```cpp
+class AccessLevels {
+public:
+    int GetReadOnly() const { return readOnly; }
+    void SetReadWrite(int value) { readWrite = value; }
+    int GetReadWrite() const { return readWrite; }
+    void SetWriteOnly(int value) { writeOnly = value; }
+
+private:
+    int noAccess; // 不允许访问 
+    int readOnly; // 只读
+    int readWrite;// 可读、可写
+    int writeOnly;// 只写
+};
+```
+
+封装的另外好处是隐藏了代码当中的细节，只给用户提供相应的函数，但是背后的具体细节可以有多种实现方式。另外封装意味着其他地方不会直接使用这个变量，如果是 public 的，在其他地方可能会直接使用这个变量，而后面一旦将变量再修改为 private 的时候，相关的代码都需要进行改动。
+
+ 同样的道理，对于 protected 控制权限的成员变量，派生类可以访问相应的成员，派生类可能直接使用这些成员，如果后面将权限修改为 private，则派生类的代码都需要改动，重新编译、重新测试等等。
+
+## 条款 23：宁以 non-member、non-friend 替换 member 函数
+
+假设一个类作为浏览器，它需要清空 cache、访问历史、cookies 等，则可能有这样的需要同时调用相应的函数来清除这些内容：
+
+```cpp
+class WebBrowser {
+public:
+    ...
+    void ClearCache();
+    void ClearHistory();
+    void RemoveCookies();
+    ...
+    // 不推荐成员函数
+    // void ClearEverything();
+};
+
+void ClearEverything(WebBrowser& wb) {  
+    wb.ClearCache();  
+    wb.ClearHistory();  
+    wb.RemoveCookies();  
+}
+```
+
+这里更加推荐采用非成员、非友元函数，对于封装性来说，越少的函数看不到 private 成员变量，则封装性越高，越多的东西被封装，能改变这些东西的能力也就越大。
+
+对于友元函数来说它是可以访问到函数的私有成员，所以能用非友元函数完成的功能，就不要使用友元函数，它破坏了封装性。
+
+在 C++ 中一个比较自然的做法是将非成员函数和 WebBrowser 在同一个 namespace 当中，当 WebBrowser 提供多种功能的时候，可以采用 namespace 的方式进行隔离，减少编译依赖：
+
+```cpp
+// webbrowser.h 头文件
+namespace WebBrowserStuff {
+    class WebBrowser { ... }; // 类本身
+    void ClearEverything(WebBrowser& wb) { ... } // 一些核心函数，非成员函数
+    ...
+}
+
+// webbrowserbookmarks.h 头文件
+namespace WebBrowserStuff {
+    ... // 与书签相关的函数
+}
+
+// webbrowsercookies.h 头文件
+namespace WebBrowserStuff {
+    ... // 与cookie相关的函数
+}
+```
+
+## 条款 24：若所有参数皆需类型转换，请为此采用 non-member 函数
+
+现在有一个有理数类，它有个操作符重载函数 `operator*` 来支持有理数直接进行乘法运算，同时它的构造函数可以支持 int 类型隐式转换：
+
+```cpp
+class Rational {
+public:
+    Rational(int numerator = 0, int denominator = 1); // 可以支持int类型隐式转换
+    ...
+    const Rational operator*(const Rational& rhs) const;
+};
+```
+
+当采用 int 类型和 Rational 类型混合运算的时候，会出现下面的问题：
+
+```cpp
+Rational oneEight(1, 8);
+Rational oneHalf(1, 2);
+Rational result = oneHalf / oneEight;
+
+result = oneHalf * 2;    // 正确
+result = 2 * oneHalf;    // 报错
+```
+
+对于第一个表达式 `oneHalf * 2` 它会将右侧的 2 隐式转换为一个 Rational 对象，然后再调用相应的 `operator*` 函数，但是对于第二个表达式 `2 * oneHalf` 则无法做到，实际上类似于下面的问题：
+
+```cpp
+result = oneHalf.operator*(2);    // 正确
+result = 2.operator*(oneHalf);    // 报错
+```
+
+正确做法是采用非成员函数：
+
+```cpp
+class Rational {
+...
+};
+const Rational operator*(const Rational& lhs, const Rational& rhs) {
+	// ...
+}
+```
+
+这样对于之前的问题就可以解决了，不论 int 类型是在左侧还是右侧都可以隐式的转化为 Rational，然后再调用相应的操作符重载函数 `operator*`。
+
+## 条款 25：考虑写出一个不抛异常的 swap 函数
+
+对于采用 pimpl（以指针指向一个对象，内含真正的数据）的类型，想为它实现一个 swap 函数，可以采用对标准库的 `std::swap` 进行特化：
+
+```cpp
+class Widget {
+public:
+    void swap(Widget& other) {
+        using std::swap; // 下面解释
+        swap(pImpl, other.pImpl);
+    }
+    ...
+
+private:
+    WidgetImpl* pImpl;
+};
+
+namespace std {
+    template<>
+    void swap<Widget>(Widget& a, Widget& b) {
+        a.swap(b);
+    }
+}
+```
+
+但是如果 Widget 是模版类型的话，由于 C++ 只允许对类模版偏特化，而不允许对函数模版偏特化，只能使用重载的方式：
+
+```cpp
+namespace std {
+    template<typename T>
+    void swap(Widget<T>& a, Widget<T>& b) {
+        a.swap(b);
+    }
+}
+```
+
+但是上面代码对于 std 命名空间来说是不被允许的，合适的做法是在另外一个命名空间添加对应的重载版本：
+
+```cpp
+namespace WidgetStuff {
+    ...
+    template<typename T>
+    class Widget { ... };
+    ...
+    template<typename T>3
+    void swap(Widget<T>& a, Widget<T>& b) {
+        a.swap(b);
+    }
+}
+```
+
+在最开始的 Widget 的 swap 函数当中，使用了一行 `using std::swap`，它引入了标准库的 `swap` 函数，但是由于 C++ 的命名查找规则，**编译器会从使用名字的地方开始向上查找，由内向外查找各级作用域（命名空间）直到全局作用域（命名空间），找到同名的声明即停止，若最终没找到则报错**。
+
+编译器更加喜欢 `std::swap` 的 T 专属版本，而非一般化的模版，所以如果针对 T 类型有 `std::swap` 特化的版本，编译器会挑选特化的版本。
+
+下面的写法就是错误的，因为它强制让编译器只认识 std 内的 swap(包括任何特化的模版)，因此不会调用适合位置的 T 专属版本（即上面另外命名空间当中的特化版本）。
+
+```cpp
+void swap(Widget& other) {
+	using std::swap; 
+	std::swap(pImpl, other.pImpl); // 错误的调用方式
+}
+```
+
