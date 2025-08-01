@@ -17,10 +17,10 @@ int loop = 0;
 
 // 打印函数
 void printChar(int curr, int count) {
-    std::unique_lock<std::mutex> lock(mtx);
 
-    int i;
+    int i = 0;
     while (i < count) {
+        std::unique_lock<std::mutex> lock(mtx);
         // 不是当前线程执行的时候，该线程进行阻塞等待
         while (loop != curr) {
             cv.wait(lock);
@@ -34,7 +34,7 @@ void printChar(int curr, int count) {
 }
 
 int main() {
-    // 创建三个线程，交替打印 'a', 'b', 'c' 共10次
+    // 创建三个线程，分别打印 'a', 'b', 'c'
     std::thread threadA(printChar, 0, 10);
     std::thread threadB(printChar, 1, 10);
     std::thread threadC(printChar, 2, 10);
@@ -47,4 +47,5 @@ int main() {
     std::cout << std::endl;  // 输出换行以使结果更清晰
     return 0;
 }
+
 ```
