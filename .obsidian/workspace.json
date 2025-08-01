@@ -13,8 +13,8 @@
             "state": {
               "type": "split-diff-view",
               "state": {
-                "aFile": "300-OperatingSystem/301-OS八股整理/01-进程管理.md",
-                "bFile": "300-OperatingSystem/301-OS八股整理/01-进程管理.md",
+                "aFile": ".obsidian/appearance.json",
+                "bFile": ".obsidian/appearance.json",
                 "aRef": ""
               }
             }
@@ -151,8 +151,22 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "079adfa684423e11",
+  "active": "15e44a16b1b21944",
   "lastOpenFiles": [
+    "200-Golang/Basic/context.go",
+    "200-Golang/Basic",
+    "200-Golang",
+    "200-CPP/205-OtherNotes/valgrind.md",
+    "200-CPP/205-OtherNotes/pics/Pasted image 20240424143518.png",
+    "200-CPP/205-OtherNotes/pics",
+    "200-CPP/205-OtherNotes/ASAN.md",
+    "200-CPP/204-TinyWheel/线程池的实现.md",
+    "200-CPP/204-TinyWheel/生产者消费者模型.md",
+    "200-CPP/204-TinyWheel/单例模式.md",
+    "200-CPP/204-TinyWheel/C++常见手撕题整理.md",
+    "100-Algorithm/十大排序算法.md",
+    "100-Algorithm/pics/allsort.png",
+    "100-Algorithm/pics",
     "100-Algorithm/101-Leetcode/剑指offer.md",
     "300-OperatingSystem/301-OS八股整理/01-进程管理.md"
   ]
