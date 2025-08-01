@@ -1,0 +1,159 @@
+{
+  "main": {
+    "id": "6c5be40b8629d930",
+    "type": "split",
+    "children": [
+      {
+        "id": "e28eb74d2e59b2e4",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "079adfa684423e11",
+            "type": "leaf",
+            "state": {
+              "type": "split-diff-view",
+              "state": {
+                "aFile": "300-OperatingSystem/301-OS八股整理/01-进程管理.md",
+                "bFile": "300-OperatingSystem/301-OS八股整理/01-进程管理.md",
+                "aRef": ""
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "d7ce2081860d82d0",
+    "type": "split",
+    "children": [
+      {
+        "id": "1438536368499bd4",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "e1911353713070e5",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "2e545eb644dc9f1e",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "9fe05948c29d25e1",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {}
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "98d9a2a87633fa6c",
+    "type": "split",
+    "children": [
+      {
+        "id": "9bb6f4f59d03f85e",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "51dabed0579e64f6",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "b02fb8a80dea7cbc",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "dd4260db4a6c86ff",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true
+              }
+            }
+          },
+          {
+            "id": "8a3c6210a7ac779e",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {}
+            }
+          },
+          {
+            "id": "15e44a16b1b21944",
+            "type": "leaf",
+            "state": {
+              "type": "git-view",
+              "state": {}
+            }
+          }
+        ],
+        "currentTab": 4
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:打开快速切换": false,
+      "graph:查看关系图谱": false,
+      "canvas:新建白板": false,
+      "daily-notes:打开/创建今天的日记": false,
+      "templates:插入模板": false,
+      "command-palette:打开命令面板": false,
+      "obsidian-git:Open Git source control": false
+    }
+  },
+  "active": "079adfa684423e11",
+  "lastOpenFiles": [
+    "100-Algorithm/101-Leetcode/剑指offer.md",
+    "300-OperatingSystem/301-OS八股整理/01-进程管理.md"
+  ]
+}
